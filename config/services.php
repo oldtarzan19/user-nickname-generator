@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'pokeapi' => [
+        'enabled' => env('POKEAPI_ENABLED', true),
+        'base_url' => env('POKEAPI_BASE_URL', 'https://pokeapi.co/api/v2/'),
+    ],
+
 ];
