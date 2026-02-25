@@ -1,59 +1,159 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+﻿# User Nickname Generator - Backend Interju Feladat
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12 backend feladatmegoldas, ahol a rendszer percenkent minden felhasznalohoz uj becenevet general es elmenti.
+A becenev alapertelmezetten a PokeAPI-bol erkezik, hiba vagy kikapcsolas eseten 8 karakteres random stringre valt fallback-kent.
 
-## About Laravel
+## Funkcionalis osszefoglalo
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Userhez tobb nickname tarolhato (`users` 1:N `nicknames`).
+- Utemezett job percenkent fut.
+- Minden futasban minden felhasznalo uj nickname-et kap.
+- API endpoint listazza az osszes usert a nickname-jeikkel.
+- Seeder general tesztfelhasznalokat.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Technologia
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2+
+- Laravel 12
+- SQLite
+- Queue: database driver
+- Scheduler: Laravel scheduler (`routes/console.php`)
 
-## Learning Laravel
+## Projekt struktura (lenyeges fajlok)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- `app/Jobs/GenerateNicknameJob.php` - percenkenti nickname generalas minden userre
+- `app/Services/NicknameGeneratorService.php` - PokeAPI + fallback logika
+- `app/Models/User.php` - `nicknames()` kapcsolat
+- `app/Models/Nickname.php` - `user()` kapcsolat
+- `database/migrations/2026_02_25_135837_create_nicknames_table.php` - nicknames tabla
+- `routes/console.php` - scheduler bejegyzes
+- `routes/api.php` - `/api/users` endpoint
+- `app/Http/Controllers/UserController.php` - user lista nickname-ekkel
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Kornyezeti valtozok
 
-## Laravel Sponsors
+A `.env` fajlban:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- `POKEAPI_ENABLED=true` - ha `false`, mindig random 8 karakteres nickname keszul
+- `POKEAPI_BASE_URL=https://pokeapi.co/api/v2` - Pokemon API alap URL
+- `QUEUE_CONNECTION=database`
+- `DB_CONNECTION=sqlite`
 
-### Premium Partners
+A `.env.example` mar tartalmazza a PokeAPI defaultokat.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Telepites
 
-## Contributing
+### 1. Fuggosegek
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer install
+```
 
-## Code of Conduct
+### 2. Env letrehozas
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Linux/macOS:
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Windows PowerShell:
 
-## License
+```powershell
+Copy-Item .env.example .env
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 3. App key
+
+```bash
+php artisan key:generate
+```
+
+### 4. SQLite adatbazis fajl
+
+Linux/macOS:
+
+```bash
+touch database/database.sqlite
+```
+
+Windows PowerShell:
+
+```powershell
+New-Item database/database.sqlite -ItemType File -Force
+```
+
+### 5. Migration + seeding
+
+```bash
+php artisan migrate --seed
+```
+
+Seeder jelenleg 20 tesztfelhasznalot hoz letre.
+
+## Inditas (lokalis)
+
+Szukseges 3 folyamat:
+
+1. HTTP szerver
+
+```bash
+php artisan serve
+```
+
+2. Queue worker (a queued jobok feldolgozasahoz)
+
+```bash
+php artisan queue:work --tries=1
+```
+
+3. Scheduler
+
+Dev modban:
+
+```bash
+php artisan schedule:work
+```
+
+Alternativa: percenkent manualis trigger (pl. masik terminalbol):
+
+```bash
+php artisan schedule:run
+```
+
+## API
+
+### GET `/api/users`
+
+Visszaadja az osszes usert betoltott nickname-ekkel (`User::with('nicknames')`).
+
+Pelda:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Test User",
+    "email": "test@example.com",
+    "nicknames": [
+      {
+        "id": 10,
+        "user_id": 1,
+        "nickname": "pikachu",
+        "created_at": "2026-02-25T18:00:00.000000Z",
+        "updated_at": "2026-02-25T18:00:00.000000Z"
+      }
+    ]
+  }
+]
+```
+
+## Mukodesi logika
+
+1. A scheduler percenkent dispatch-eli a `GenerateNicknameJob`-ot.
+2. A job chunkolva beolvassa a usereket.
+3. Minden userhez ment egy uj nickname rekordot.
+4. A nickname generalas:
+   - ha `POKEAPI_ENABLED=true`, random Pokemon nevet probal lehuzni,
+   - ha API hiba van vagy ervenytelen a valasz, fallback: random 8 karakter,
+   - ha `POKEAPI_ENABLED=false`, kozvetlen random 8 karakter.
